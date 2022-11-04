@@ -328,21 +328,18 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            flash("You must provide username")
-            return redirect("/")
+            return loginfail("You must provide username")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            flash("You must provide password")
-            return redirect("/")
+            return loginfail("You must provide password")
 
         # Query database for username
         rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            flash("invalid username and/or password")
-            return redirect("/")
+            return loginfail("invalid username and/or password")
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
