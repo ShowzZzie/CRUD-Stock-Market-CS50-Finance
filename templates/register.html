@@ -6,15 +6,18 @@
 
 {% block main %}
     <form action="/register" method="post">
-        <div class="form-group">
+        <div class="form-group" id="buy-narrower">
             <input autocomplete="off" autofocus class="form-control" id="username" name="username" placeholder="Username" type="text">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="buy-narrower">
             <input class="form-control" id="password" name="password" placeholder="Password" type="password">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="buy-narrower">
             <input class="form-control" id="confirmation" name="confirmation" placeholder="Password (again)" type="password">
         </div>
+        <div class="password-info">
+            Password must be at least 8 characters long and consist of an uppercase letter, digit and a special symbol
+        </div><br>
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
 {% endblock %}
