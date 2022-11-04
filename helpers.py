@@ -21,11 +21,6 @@ def apology(message, code=400):
     return render_template("apology.html", top=code, bottom=escape(message)), code
 
 
-def loginfail(msg):
-    flash(msg)
-    return redirect("/")
-
-
 def login_required(f):
     """
     Decorate routes to require login.
