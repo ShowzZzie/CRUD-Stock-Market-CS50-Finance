@@ -97,9 +97,11 @@ def index():
                 return redirect('/')
 
             if shares.isdigit() == False:
-                return apology("You can't purchase partial shares")
+                flash("You can't purchase partial shares")
+                return redirect("/")
             if shares.isalpha() == True:
-                return apology("Letters are invalid characters for quantity")
+                flash("Letters are invalid characters for quantity")
+                return redirect("/")
 
             int_shares = int(float(shares))
             if int_shares <= 0:
@@ -108,10 +110,12 @@ def index():
 
             stock = lookup(symbol)
             if not stock:
-                return apology("Invalid Stock Symbol")
+                flash("Invalid Stock Symbol")
+                return redirect("/")
             data = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])
             if not data:
-                return apology("Cash Query Failed")
+                flash("Cash Query Failed")
+                return redirect("/")
 
             cash = data[0]["cash"]
 
@@ -119,20 +123,24 @@ def index():
             total = stock_price * int_shares
 
             if (int_shares * stock_price) > cash:
-                return apology("You don't have enough cash")
+                flash("You don't have enough cash")
+                return redirect("/")
 
             buy = db.execute("INSERT INTO transactions (user_id, symbol, shares, price, total) VALUES (?, ?, ?, ?, ?)", session["user_id"], symbol, shares, stock_price, total)
             if not buy:
-                return apology("Buy Query Error")
+                flash("Buy Query Error")
+                return redirect("/")
 
             type = "BOUGHT"
             history = db.execute("INSERT INTO history (user_id, type, symbol, shares, price) VALUES (?, ?, ?, ?, ?)", session["user_id"], type, symbol, shares, stock_price)
             if not history:
-                return apology("History Query Error")
+                flash("History Query Error")
+                return redirect("/")
 
             spend_cash = db.execute("UPDATE users SET cash = cash - ? WHERE id = ?", total, session["user_id"])
             if not spend_cash:
-                return apology("Spending Query Error")
+                flash("Spending Query Error")
+                return redirect("/")
 
             return redirect("/")
 
@@ -157,9 +165,11 @@ def index():
             # above: dict stocks where key is symbol and value is amount of shares
 
             if not stocks[symbol]:
-                return apology("Invalid symbol")
+                flash("Invalid symbol")
+                return redirect("/")
             if int(amount) > stocks[symbol]:
-                return apology("You can't sell more shares than you own!")
+                flash("You can't sell more shares than you own!")
+                return redirect("/")
 
             shares = -int(amount)
 
@@ -170,7 +180,8 @@ def index():
             type = "SOLD"
             history = db.execute("INSERT INTO history (user_id, type, symbol, shares, price) VALUES (?, ?, ?, ?, ?)", session["user_id"], type, symbol, shares, stock_price)
             if not history:
-                return apology("History Query Error")
+                flash("History Query Error")
+                return redirect("/")
 
             # remove from transactions
             newshares = stocks[symbol] - int(amount)
@@ -200,24 +211,31 @@ def buy():
         symbol = request.form.get("symbol").upper()
         shares = request.form.get("shares")
         if not symbol:
-            return apology("Missing Symbol")
+            flash("Missing Symbol")
+            return redirect("/buy")
         if not shares:
-            return apology("Missing Shares")
+            flash("Missing Shares")
+            return redirect("/buy")
         if shares.isdigit() == False:
-            return apology("You can't purchase partial shares")
+            flash("You can't purchase partial shares")
+            return redirect("/buy")
         if shares.isalpha() == True:
-            return apology("Letters are invalid characters for quantity")
+            flash("Letters are invalid characters for quantity")
+            return redirect("/buy")
 
         int_shares = int(float(shares))
         if int_shares <= 0:
-            return apology("Invalid amount of shares")
+            flash("Invalid amount of shares")
+            return redirect("/buy")
 
         stock = lookup(symbol)
         if not stock:
-            return apology("Invalid Stock Symbol")
+            flash("Invalid Stock Symbol")
+            return redirect("/buy")
         data = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])
         if not data:
-            return apology("Cash Query Failed")
+            flash("Cash Query Failed")
+            return redirect("/buy")
 
         cash = data[0]["cash"]
 
@@ -225,20 +243,24 @@ def buy():
         total = stock_price * int_shares
 
         if (int_shares * stock_price) > cash:
-            return apology("You don't have enough cash")
+            flash("You don't have enough cash")
+            return redirect("/buy")
 
         buy = db.execute("INSERT INTO transactions (user_id, symbol, shares, price, total) VALUES (?, ?, ?, ?, ?)", session["user_id"], symbol, shares, stock_price, total)
         if not buy:
-            return apology("Buy Query Error")
+            flash("Buy Query Error")
+            return redirect("/buy")
 
         type = "BOUGHT"
         history = db.execute("INSERT INTO history (user_id, type, symbol, shares, price) VALUES (?, ?, ?, ?, ?)", session["user_id"], type, symbol, shares, stock_price)
         if not history:
-            return apology("History Query Error")
+            flash("History Query Error")
+            return redirect("/buy")
 
         spend_cash = db.execute("UPDATE users SET cash = cash - ? WHERE id = ?", total, session["user_id"])
         if not spend_cash:
-            return apology("Spending Query Error")
+            flash("Spending Query Error")
+            return redirect("/buy")
 
         return redirect("/")
 
@@ -287,7 +309,8 @@ def addcash():
         type = "ADDED CASH"
         history = db.execute("INSERT INTO history (user_id, type, symbol, shares, price) VALUES (?, ?, ?, ?, ?)", session["user_id"], type, n, n, inc)
         if not history:
-            return apology("History Query Error")
+            flash("History Query Error")
+            return redirect("/addcash")
 
         flash('Money added successfully')
         return redirect("/addcash")
@@ -305,18 +328,21 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            flash("You must provide username")
+            return redirect("/login")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            flash("You must provide password")
+            return redirect("/login")
 
         # Query database for username
         rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            return apology("invalid username and/or password", 403)
+            flash("invalid username and/or password")
+            return redirect("/login")
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -437,7 +463,9 @@ def quote():
 
         search = lookup(quote)
         if not search:
-            return apology("Query Error")
+            flash("Query Error")
+            return redirect("/quote")
+
         search["price"] = usd(search["price"])
 
         return render_template("quoted.html", search=search)
@@ -496,7 +524,8 @@ def register():
             else:
                 new_user = db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, hash_p)
                 if not new_user:
-                    return apology("Query Error")
+                    flash("Query Error")
+                    return redirect("/register")
 
             login = db.execute("SELECT * FROM users WHERE username = ?", username)
             session["user_id"] = login[0]["id"]
@@ -535,9 +564,11 @@ def sell():
         # above: dict stocks where key is symbol and value is amount of shares
 
         if not stocks[symbol]:
-            return apology("Invalid symbol")
+            flash("Invalid symbol")
+            return redirect("/sell")
         if int(amount) > stocks[symbol]:
-            return apology("You can't sell more shares than you own!")
+            flash("You can't sell more shares than you own!")
+            return redirect("/sell")
 
         shares = -int(amount)
 
@@ -548,7 +579,8 @@ def sell():
         type = "SOLD"
         history = db.execute("INSERT INTO history (user_id, type, symbol, shares, price) VALUES (?, ?, ?, ?, ?)", session["user_id"], type, symbol, shares, stock_price)
         if not history:
-            return apology("History Query Error")
+            flash("History Query Error")
+            return redirect("/sell")
 
         # remove from transactions
         newshares = stocks[symbol] - int(amount)
