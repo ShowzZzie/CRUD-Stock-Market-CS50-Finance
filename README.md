@@ -1,5 +1,5 @@
 # CRUD-STOCK-MARKET-Application-CS50-Finance
-LINK: https://fake-stock-market.herokuapp.com/
+LINK: https://fake-stock-market.herokuapp.com/register
 
 This website is a variation of Harvard's CS50x Week 9 Problem Set: Finance.
 
